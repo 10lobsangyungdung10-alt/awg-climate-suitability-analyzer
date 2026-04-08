@@ -327,24 +327,29 @@ class AWGAnalyzer:
 
         forecast_days: list[ForecastDay] = []
         for i, day_date in enumerate(dates):
-            t = temps[i] if i < len(temps) else 25.0
-            h = humidities[i] if i < len(humidities) else 60.0
-            p = pressures[i] if i < len(pressures) else 1013.25
-            w = wind_speeds[i] if i < len(wind_speeds) else 0.0
+            temperature = temps[i] if i < len(temps) else 25.0
+            humidity = humidities[i] if i < len(humidities) else 60.0
+            pressure = pressures[i] if i < len(pressures) else 1013.25
+            wind_speed = wind_speeds[i] if i < len(wind_speeds) else 0.0
 
             # Handle None values from API
-            t = t if t is not None else 25.0
-            h = h if h is not None else 60.0
-            p = p if p is not None else 1013.25
-            w = w if w is not None else 0.0
+            temperature = temperature if temperature is not None else 25.0
+            humidity = humidity if humidity is not None else 60.0
+            pressure = pressure if pressure is not None else 1013.25
+            wind_speed = wind_speed if wind_speed is not None else 0.0
 
             parsed_date = date.fromisoformat(str(day_date))
-            features = self._build_feature_dict(t, h, p, w, month=parsed_date.month)
+            features = self._build_feature_dict(
+                temperature, humidity, pressure, wind_speed, month=parsed_date.month
+            )
             day_output, _ = awg_model.predict(features)
 
-            psychro = get_all_psychrometric_properties(t, h, p)
+            psychro = get_all_psychrometric_properties(temperature, humidity, pressure)
             day_weather = WeatherData(
-                temperature=t, humidity=h, pressure=p, wind_speed=w,
+                temperature=temperature,
+                humidity=humidity,
+                pressure=pressure,
+                wind_speed=wind_speed,
                 dew_point=psychro.dew_point,
                 absolute_humidity=psychro.absolute_humidity,
             )
@@ -353,9 +358,9 @@ class AWGAnalyzer:
             forecast_days.append(
                 ForecastDay(
                     date=str(day_date),
-                    temperature=round(t, 2),
-                    humidity=round(h, 2),
-                    pressure=round(p, 2),
+                    temperature=round(temperature, 2),
+                    humidity=round(humidity, 2),
+                    pressure=round(pressure, 2),
                     predicted_output=day_output,
                     suitability_score=day_score,
                 )
