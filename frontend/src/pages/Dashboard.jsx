@@ -32,7 +32,7 @@ export default function Dashboard() {
     try {
       const data = await analyzeLocation(city, country);
 
-      // Normalise response – backends may use slightly different key names
+      // Normalize response – backends may use slightly different key names
       setWeatherData(data.weather || data.current_weather || null);
       setPsychrometric(data.psychrometric || data.psychrometric_properties || null);
       setSuitabilityScore(

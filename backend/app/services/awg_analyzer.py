@@ -265,6 +265,13 @@ class AWGAnalyzer:
             logger.info("Auto-training model with synthetic data …")
             synthetic_df = awg_model.generate_training_data(lat=lat, lon=lon)
             awg_model.train(synthetic_df)
+            # Persist the auto-trained model so future requests skip retraining
+            from app.config import settings  # deferred to avoid circular import at module load
+            try:
+                awg_model.save(settings.model_path_resolved)
+                logger.info("Auto-trained model persisted to %s", settings.model_path_resolved)
+            except Exception as exc:
+                logger.warning("Could not persist auto-trained model: %s", exc)
 
         # 5. ML prediction
         today = date.today()

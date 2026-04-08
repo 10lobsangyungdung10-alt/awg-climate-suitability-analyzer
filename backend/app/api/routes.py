@@ -290,7 +290,7 @@ async def train_model(request: LocationRequest) -> TrainResponse:
     # Add physics-based target column
     if not df.empty:
         df["water_output"] = df.apply(
-            lambda row: awg_model._physics_water_output(
+            lambda row: awg_model.physics_water_output(
                 row["temperature"], row["humidity"], row["pressure"], row["wind_speed"]
             ),
             axis=1,

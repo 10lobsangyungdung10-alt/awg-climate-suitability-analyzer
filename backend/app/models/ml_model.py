@@ -76,7 +76,7 @@ class AWGMLModel:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _physics_water_output(
+    def physics_water_output(
         temperature: float,
         humidity: float,
         pressure: float = 1013.25,
@@ -226,13 +226,15 @@ class AWGMLModel:
             100.0,
         )
 
+        from app.services.psychrometric_service import calculate_dew_point  # deferred to avoid circular import
+
         pressure = np.clip(rng.normal(1013.25, 8.0, n_samples), 950.0, 1050.0)
         wind_speed = np.clip(rng.exponential(10.0, n_samples), 0.0, 80.0)
 
         # Derived quantities
         dew_point = np.array(
             [
-                self._physics_dew_point(t, h)
+                calculate_dew_point(t, h)
                 for t, h in zip(temperature, humidity)
             ]
         )
@@ -247,7 +249,7 @@ class AWGMLModel:
         # Physics-based target
         water_output = np.array(
             [
-                self._physics_water_output(t, h, p, w)
+                self.physics_water_output(t, h, p, w)
                 for t, h, p, w in zip(temperature, humidity, pressure, wind_speed)
             ]
         )
@@ -269,13 +271,6 @@ class AWGMLModel:
             }
         )
         return self._engineer_features(df)
-
-    @staticmethod
-    def _physics_dew_point(temp_c: float, rh_percent: float) -> float:
-        """Inline Magnus dew-point (avoids circular import)."""
-        rh_frac = max(1e-6, min(100.0, rh_percent)) / 100.0
-        gamma = math.log(rh_frac) + (17.625 * temp_c) / (243.04 + temp_c)
-        return (243.04 * gamma) / (17.625 - gamma)
 
     # ------------------------------------------------------------------
     # Training
